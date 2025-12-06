@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import Box from "@mui/material/Box";
 import {
   MenuItem,
@@ -18,10 +18,16 @@ import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import "../../../pages/pagestyle.scss";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import upsImage from "../../../../assets/Pagesimage/ups-image.jpg";
-import { useLocation } from "react-router-dom";
 import server from "../../../../server/server";
 
 const label = { inputProps: { "aria-label": "Checkbox demo" } };
+
+const getArtWorkClass = (art) => {
+  if (!art || art === "NA") return "art-badge art-blue";
+  if (art.toLowerCase() === "old") return "art-badge art-red";
+  if (art.toLowerCase() === "new") return "art-badge art-green";
+  return "art-badge";
+};
 
 const VisuallyHiddenInput = styled("input")`
   clip: rect(0 0 0 0);
@@ -142,6 +148,8 @@ const ComponentRow = ({
   </>
 );
 
+// Component Row End Here
+
 // File Upload Component
 const FileUpload = ({
   onFileUpload,
@@ -196,44 +204,81 @@ const FileUpload = ({
   </Box>
 );
 
-// Main Component Startted Here
+// Main Component Started Here
 
-function UpsDashboard() {
+function EditDesign() {
   const location = useLocation();
-  const { saleOrder, design } = location.state || {};
-  console.log("Saleordersssssssss: ", saleOrder);
-  console.log("designssssssssss: ", design);
+  const { salesOrder, design } = location.state || {};
 
-  const initialFormData = {
-    soNumber: saleOrder?.saleorder_no || "",
-    soDate: saleOrder?.posting_date
-      ? new Date(saleOrder.posting_date).toISOString().split("T")[0]
-      : "",
-    fabSite: "",
-    jobName: "",
+  console.log("Sales Order:", salesOrder);
+  console.log("Design data:", design);
+  const formatDateISO = (value) => {
+    if (!value) return "";
+    const date = value.$date ? new Date(value.$date) : new Date(value);
+    return isNaN(date) ? "" : date.toISOString().split("T")[0]; // YYYY-MM-DD
   };
+  const [formData, setFormData] = useState({
+    soNumber: salesOrder?.saleorder_no || "",
+    soDate: salesOrder?.posting_date
+      ? new Date(salesOrder?.posting_date).toISOString().split("T")[0]
+      : "",
+    machine: design?.machine || "",
+    totalQty: salesOrder?.quantity || "",
+  });
 
-  const initialComponentState = {
+  const createComponent = () => ({
     selected: false,
     length: "",
     breadth: "",
-    thickness: saleOrder?.thickness || "",
+    thickness: salesOrder?.thickness || "",
     ups: "",
     sheets: "",
     file: null,
+  });
+
+  const initialComponentsState = {
+    Lid: createComponent(),
+    Body: createComponent(),
+    Bottom: createComponent(),
+    "Lid & Body": createComponent(),
+    "Lid & Body & Bottom": createComponent(),
+    "Body & Bottom": createComponent(),
   };
 
   const [open, setOpen] = useState(false);
   const [currentImage, setCurrentImage] = useState("");
-  const [formData, setFormData] = useState(initialFormData);
-  const [components, setComponents] = useState({
-    Lid: initialComponentState,
-    Body: initialComponentState,
-    Bottom: initialComponentState,
-    "Lid & Body": initialComponentState,
-    "Lid & Body & Bottom": initialComponentState,
-    "Body & Bottom": initialComponentState,
-  });
+  const [components, setComponents] = useState(initialComponentsState);
+
+  useEffect(() => {
+    if (!design?.components) return;
+
+    const updatedComponents = { ...initialComponentsState };
+
+    const componentsArray = Array.isArray(design.components)
+      ? design.components
+      : Object.entries(design.components).map(([name, data]) => ({
+          name,
+          ...data,
+        }));
+
+    componentsArray.forEach((comp) => {
+      const { name } = comp;
+      if (name && updatedComponents[name]) {
+        updatedComponents[name] = {
+          ...updatedComponents[name],
+          selected: comp?.selected !== undefined ? comp.selected : true,
+          length: comp?.length || "",
+          breadth: comp?.breadth || "",
+          thickness: comp?.thickness || salesOrder?.thickness || "",
+          ups: comp?.ups || "",
+          sheets: comp?.sheets || "",
+          file: comp?.file || null,
+        };
+      }
+    });
+
+    setComponents(updatedComponents);
+  }, [design]);
 
   const handleOpen = () => setOpen(true);
 
@@ -271,7 +316,7 @@ function UpsDashboard() {
   const handleViewFile = (componentName) => {
     const file = components[componentName]?.file;
     if (file) {
-      if (file.type.startsWith("image/")) {
+      if (file.type?.startsWith("image/")) {
         const imageUrl = URL.createObjectURL(file);
         setCurrentImage(imageUrl);
         setOpen(true);
@@ -285,74 +330,112 @@ function UpsDashboard() {
   };
 
   const handleSubmit = async () => {
-    const selectedComponents = Object.entries(components)
-      .filter(([_, data]) => data.selected)
-      .map(([name, data]) => ({
-        name,
-        selected: data.selected,
-        length: data.length,
-        breadth: data.breadth,
-        thickness: data.thickness,
-        ups: data.ups,
-        sheets: data.sheets,
-        fileName: data.file ? data.file.name : "",
-      }));
+    const fullComponents = {};
 
-    if (selectedComponents.length === 0) {
+    Object.entries(components).forEach(([name, data]) => {
+      if (data.selected) {
+        fullComponents[name] = {
+          selected: data?.selected,
+          length: data?.length,
+          breadth: data?.breadth,
+          thickness: data?.thickness,
+          ups: data?.ups,
+          sheets: data?.sheets,
+          fileName: data.file ? data.file.name : "",
+        };
+      }
+    });
+
+    if (Object.keys(fullComponents).length === 0) {
       alert("Please select at least one component");
-      return false;
+      return;
     }
 
-    const incompleteComponents = selectedComponents.filter(
-      (comp) =>
-        !comp.length ||
-        !comp.breadth ||
-        !comp.thickness ||
-        !comp.ups ||
-        !comp.sheets
-    );
-
-    if (incompleteComponents.length > 0) {
-      alert("Please fill all fields for selected components");
-      return false;
+    // Validation
+    for (const key in fullComponents) {
+      const item = fullComponents[key];
+      if (
+        !item.length ||
+        !item.breadth ||
+        !item.thickness ||
+        !item.ups ||
+        !item.sheets
+      ) {
+        alert(`Please fill all fields for component: ${key}`);
+        return;
+      }
     }
 
     try {
-      const response = await server.post("/design/upsDesign", {
-        ...saleOrder,
-        soNumber: formData.soNumber,
-        soDate: formData.soDate,
-        fabSite: formData.fabSite,
-        jobName: formData.jobName,
-        components: selectedComponents,
+      const response = await server.post("/design/add", {
+        saleorder_no: formData?.soNumber,
+        art_work: salesOrder?.art_work,
+        size: salesOrder?.item_description,
+        customer_name: salesOrder?.customer_name,
+        start_date: salesOrder?.posting_date,
+        end_date: salesOrder?.due_date,
+        soDate: formData?.soDate,
+        machine: formData?.machine,
+        totalQty: formData?.totalQty,
+        components: fullComponents,
       });
 
       const result = response.data;
 
       if (result.success) {
-        alert("Design saved successfully!");
-        console.log("Saved to MongoDB:", result.design);
-        // handleCancel();
+        alert("Design updated successfully!");
+        console.log("Updated in MongoDB:", result.design);
       } else {
-        throw new Error(result.error || "Failed to save design");
+        throw new Error(result.error || "Failed to update design");
       }
     } catch (error) {
-      console.error("Error submitting data:", error);
+      console.error("Error updating data:", error);
       const errorMessage = error.response?.data?.error || error.message;
       alert(`Error: ${errorMessage}`);
     }
   };
 
   const handleCancel = () => {
-    setFormData(initialFormData);
-    setComponents({
-      Lid: initialComponentState,
-      Body: initialComponentState,
-      Bottom: initialComponentState,
-      "Lid & Body": initialComponentState,
-      "Lid & Body & Bottom": initialComponentState,
-      "Body & Bottom": initialComponentState,
-    });
+    if (design) {
+      setFormData({
+        soNumber: salesOrder?.saleorder_no || "",
+        soDate: salesOrder?.posting_date
+          ? new Date(salesOrder?.posting_date).toISOString().split("T")[0]
+          : "",
+        machine: design?.machine || "",
+        totalQty: salesOrder?.quantity || "",
+      });
+
+      if (design.components) {
+        const resetComponents = { ...initialComponentsState };
+
+        if (Array.isArray(design.components)) {
+          design.components.forEach((comp) => {
+            if (comp.name && resetComponents[comp.name]) {
+              resetComponents[comp.name] = {
+                ...resetComponents[comp.name],
+                selected: comp.selected !== undefined ? comp.selected : true,
+                length: comp.length || "",
+                breadth: comp.breadth || "",
+                thickness: comp.thickness || salesOrder?.thickness || "",
+                ups: comp.ups || "",
+                sheets: comp.sheets || "",
+                file: comp.file || null,
+              };
+            }
+          });
+        }
+        setComponents(resetComponents);
+      }
+    } else {
+      setFormData({
+        soNumber: "",
+        soDate: "",
+        machine: "",
+        totalQty: "",
+      });
+      setComponents(initialComponentsState);
+    }
 
     if (open) {
       handleClose();
@@ -376,12 +459,12 @@ function UpsDashboard() {
           <div className="main-inner-txts">
             <Link
               style={{ color: "#0a85cb", textDecoration: "none" }}
-              to={"/planning"}
+              to={"/desigining_dashboard"}
             >
-              Ups Design Plan
+              Design Dashboard
             </Link>
             <KeyboardArrowRightIcon sx={{ color: "#0a85cb" }} />
-            <div>Edit </div>
+            <div>Edit Design </div>
           </div>
         </Box>
       </Box>
@@ -398,6 +481,7 @@ function UpsDashboard() {
                   size="small"
                   value={formData.soNumber}
                   onChange={(e) => handleFormChange("soNumber", e.target.value)}
+                  disabled
                 />
               </FormGroup>
             </Grid>
@@ -412,41 +496,44 @@ function UpsDashboard() {
                   type="date"
                   value={formData.soDate}
                   onChange={(e) => handleFormChange("soDate", e.target.value)}
+                  disabled
                 />
               </FormGroup>
             </Grid>
 
             <Grid size={3}>
               <FormGroup fullWidth>
-                <Typography mb={1}>Fab Site</Typography>
+                <Typography mb={1}>Machine</Typography>
                 <Select
                   labelId="demo-simple-select-label"
                   id="demo-simple-select"
-                  value={formData.fabSite}
+                  value={formData.machine}
                   size="small"
                   displayEmpty
                   renderValue={
-                    formData.fabSite !== "" ? undefined : () => "Select"
+                    formData.machine !== "" ? undefined : () => "Select"
                   }
-                  onChange={(e) => handleFormChange("fabSite", e.target.value)}
+                  onChange={(e) => handleFormChange("machine", e.target.value)}
                 >
-                  <MenuItem value={10}>Site 1</MenuItem>
-                  <MenuItem value={20}>Site 2</MenuItem>
-                  <MenuItem value={30}>Site 3</MenuItem>
+                  <MenuItem value="">Select</MenuItem>
+                  <MenuItem value="Machine 1">Machine 1</MenuItem>
+                  <MenuItem value="Machine 2">Machine 2</MenuItem>
+                  <MenuItem value="Machine 3">Machine 3</MenuItem>
                 </Select>
               </FormGroup>
             </Grid>
 
             <Grid size={3}>
               <FormGroup>
-                <Typography mb={1}>Job Name</Typography>
+                <Typography mb={1}>Total Qty</Typography>
                 <TextField
                   id="outlined-size-small"
                   name=""
                   size="small"
                   type="text"
-                  value={formData.jobName}
-                  onChange={(e) => handleFormChange("jobName", e.target.value)}
+                  value={formData.totalQty}
+                  onChange={(e) => handleFormChange("totalQty", e.target.value)}
+                  disabled
                 />
               </FormGroup>
             </Grid>
@@ -463,8 +550,25 @@ function UpsDashboard() {
         >
           <Grid container spacing={0.5}>
             <Grid size={12}>
-              <div className="Box-table-title">
-                Today's Work - ({new Date().toLocaleDateString()})
+              <div
+                className="Box-table-title"
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <div>
+                  Today's Work - ({new Date().toLocaleDateString()}){" "}
+                  <span className={getArtWorkClass(salesOrder?.art_work)}>
+                    {salesOrder?.art_work || "NA"}
+                  </span>
+                </div>
+
+                <button className="gray-md-btn">
+                  <VisibilityIcon style={{ fontSize: 20 }} />
+                  Artwork Image
+                </button>
               </div>
             </Grid>
 
@@ -557,4 +661,6 @@ function UpsDashboard() {
   );
 }
 
-export default UpsDashboard;
+// Main Component End Here
+
+export default EditDesign;
