@@ -1,61 +1,123 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
-import { IconButton, Button } from "@mui/material";
+import { IconButton } from "@mui/material";
 import SyncIcon from "@mui/icons-material/Sync";
 import { MaterialReactTable } from "material-react-table";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import "../../../pages/pagestyle.scss";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { SalesOrder } from "../../../../API/Salesorder";
-import "../../../pages/pagestyle.scss";
+
+
+
+const data = [
+  { id: 1, item: "NK25127", steel: "Alloy", size: "M12", date: "10-12-2025" },
+  { id: 2, item: "NK25128", steel: "Carbon", size: "M14", date: "11-12-2025" },
+  {
+    id: 3,
+    item: "NK25129",
+    steel: "Tool Steel",
+    size: "M16",
+    date: "12-12-2025",
+  },
+  {
+    id: 4,
+    item: "NK25130",
+    steel: "Stainless",
+    size: "M18",
+    date: "13-12-2025",
+  },
+  { id: 5, item: "NK25131", steel: "Alloy", size: "M20", date: "14-12-2025" },
+  { id: 6, item: "NK25132", steel: "Carbon", size: "M22", date: "15-12-2025" },
+  {
+    id: 7,
+    item: "NK25133",
+    steel: "Stainless",
+    size: "M24",
+    date: "16-12-2025",
+  },
+  {
+    id: 8,
+    item: "NK25134",
+    steel: "Tool Steel",
+    size: "M26",
+    date: "17-12-2025",
+  },
+  {
+    id: 9,
+    item: "NK25134",
+    steel: "Tool Steel",
+    size: "M26",
+    date: "17-12-2025",
+  },
+  {
+    id: 10,
+    item: "NK25134",
+    steel: "Tool Steel",
+    size: "M26",
+    date: "17-12-2025",
+  },
+  {
+    id: 11,
+    item: "NK25134",
+    steel: "Tool Steel",
+    size: "M26",
+    date: "17-12-2025",
+  },
+  {
+    id: 12,
+    item: "NK25134",
+    steel: "Tool Steel",
+    size: "M26",
+    date: "17-12-2025",
+  },
+];
 
 function Planning() {
-  const { salesOrders, sync } = SalesOrder();
-
   const navigate = useNavigate();
 
   const columns = useMemo(
     () => [
       {
         id: 1,
-        accessorKey: "saleorder_no",
-        header: "SO No",
+        accessorKey: "id",
+        header: "SO.No",
         size: 30,
       },
       {
         id: 2,
-        accessorKey: "posting_date",
+        accessorKey: "item",
         header: "SO Date",
         size: 30,
       },
       {
         id: 3,
-        accessorKey: "customer_name",
+        accessorKey: "steel",
         header: "Customer Name",
         size: 30,
       },
       {
         id: 4,
-        accessorKey: "item_description",
+        accessorKey: "size",
         header: "Size",
         size: 30,
       },
       {
         id: 5,
-        accessorKey: "quantity",
+        accessorKey: "date",
         header: "Qty",
         size: 30,
       },
       {
         id: 6,
-        accessorKey: "posting_date",
+        accessorKey: "date",
         header: "Start Date",
         size: 30,
       },
       {
         id: 7,
-        accessorKey: "due_date",
+        accessorKey: "date",
         header: "End Date",
         size: 30,
       },
@@ -91,7 +153,7 @@ function Planning() {
       <Box className="breadcrump-con">
         <Box className="main-title">
           <div>Planning</div>
-          <Link className="gray-md-btn" onClick={sync} to="/planning">
+          <Link className="green-md-btn" component={Link} to="/planning">
             <SyncIcon /> Sync With SO
           </Link>
         </Box>
@@ -101,7 +163,7 @@ function Planning() {
         <Box sx={{ mt: 8 }}>
           <MaterialReactTable
             columns={columns}
-            data={salesOrders}
+            data={data}
             positionActionsColumn="last"
             initialState={{
               showGlobalFilter: true,
@@ -115,7 +177,7 @@ function Planning() {
             }}
             muiTableBodyRowProps={({ row }) => ({
               onClick: () => {
-                navigate(`/editplan`,{state:row.original});
+                navigate(`/editplan`);
               },
               sx: {
                 cursor: "pointer",

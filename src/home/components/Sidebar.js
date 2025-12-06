@@ -129,41 +129,14 @@ const Sidebar = ({ isCollapsed }) => {
         <ListItem
           button
           component={Link}
-          to="/desigining_dashboard"
+          to="/UpsDesignplan"
           className={`list-element ${
-            location.pathname === "/desigining_dashboard" ||
-            location.pathname === "/editdesign"
-              ? "pageactive"
-              : ""
-          }`}
-        >
-          <DashboardIcon className="menu-icon" />
-          <ListItemText
-            primary="Designing Dashboard"
-            sx={{
-              overflow: "hidden",
-              maxWidth: isCollapsed ? 0 : 200,
-              opacity: isCollapsed ? 0 : 1,
-              transition: "max-width 0.3s ease, opacity 0.3s ease",
-              whiteSpace: "nowrap",
-            }}
-          />
-        </ListItem>
-
-        <ListItem
-          button
-          component={Link}
-          to="/printing_manager"
-          className={`list-element ${
-            location.pathname === "/printing_manager" ||
-            location.pathname === "/editprint"
-              ? "pageactive"
-              : ""
+            location.pathname === "/UpsDesignplan" ? "pageactive" : ""
           }`}
         >
           <DesignServicesIcon className="menu-icon" />
           <ListItemText
-            primary="Printing Manager"
+            primary="Ups Design plan"
             sx={{
               overflow: "hidden",
               maxWidth: isCollapsed ? 0 : 150,
@@ -179,9 +152,7 @@ const Sidebar = ({ isCollapsed }) => {
           component={Link}
           to="/coating_dashboard"
           className={`list-element ${
-            location.pathname === "/coating_dashboard" || 
-            location.pathname === "/editCoating" 
-              ? "pageactive" : ""
+            location.pathname === "/coating_dashboard" ? "pageactive" : ""
           }`}
         >
           <FormatPaintIcon className="menu-icon" />

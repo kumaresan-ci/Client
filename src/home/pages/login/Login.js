@@ -29,7 +29,7 @@ function Login() {
   const navigate = useNavigate();
 
   const [getLoginVal, setLoginVal] = useState({
-    email: "Admin",
+    email: "admin",
     password: "Admin@123",
   });
   const [getLoginDetails, setLoginDetails] = useState("");
@@ -40,46 +40,55 @@ function Login() {
   // Custom function start here
 
   const handleLogin = async () => {
-    if (!getLoginVal.email || !getLoginVal.password) {
-      return alert("Please fill all fields");
+    if (!getLoginVal.email && !getLoginVal.password) {
+      return alert("Please Fill The Empty Fields");
     }
 
-    try {
-      const res = await server.post("/admin/login", {
-        email: getLoginVal?.email,
-        password: getLoginVal?.password,
-      });
+    if (getLoginVal?.email === "admin") {
+      try {
+        const res = await server.post("/admin/login", {
+          email: getLoginVal?.email,
+          password: getLoginVal?.password,
+        });
 
-      setLoginDetails(res?.data?.message);
-
-      if (
-        res?.data?.message === "Password correct, proceed to OTP verification"
-      ) {
-        sessionStorage.setItem("adminID", res.data.adminID);
+        setLoginDetails(res?.data?.message);
+        console.log("responzzz", res?.data?.message);
+        if (res?.data?.message === "Login successful") {
+          setTimeout(() => {
+            setAuthPage(true);
+          }, [300]);
+        }
+        sessionStorage.setItem("isLoggedIn", "true");
         sessionStorage.setItem("loginMenu", JSON.stringify(adminMenu));
-        setTimeout(() => {
-          setAuthPage(true);
-        }, 300);
+      } catch (error) {
+        console.log(
+          "Error in fetching:",
+          error.response?.data || error.message
+        );
+        setLoginDetails(error.response?.data?.message);
       }
-    } catch (error) {
-      setLoginDetails(error.response?.data?.message || "Login failed");
+    } else {
+      alert("User Login");
     }
-    //  const loginMenu = {
-    //   "Planning Team": {
-    //     1: "Planning_Dashboard",
-    //     2: "Planning_Report",
-    //   },
-    //   "Designing Team": {
-    //     1: "Designing_Dashboard",
-    //     2: "Designing_Report",
-    //   },
-    //   "Coating Team": {
-    //     1: "Coating_Dashboard",
-    //     2: "Coating_Report",
-    //   },
-    // };
+
+    const loginMenu = {
+      "Planning Team": {
+        1: "Planning_Dashboard",
+        2: "Planning_Report",
+      },
+      "Designing Team": {
+        1: "Designing_Dashboard",
+        2: "Designing_Report",
+      },
+      "Coating Team": {
+        1: "Coating_Dashboard",
+        2: "Coating_Report",
+      },
+    };
+
     // sessionStorage.setItem("loginMenu", JSON.stringify(loginMenu));
   };
+
   // Custom function end here
   return (
     <Box
@@ -110,10 +119,7 @@ function Login() {
               {getLoginDetails && (
                 <Alert
                   severity={
-                    getLoginDetails ===
-                    "Password correct, proceed to OTP verification"
-                      ? "success"
-                      : "error"
+                    getLoginDetails === "Login successful" ? "success" : "error"
                   }
                 >
                   {getLoginDetails}

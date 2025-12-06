@@ -9,15 +9,11 @@ import Login from "./pages/login/Login";
 import Planning from "./pages/dashboard/planning/Planning";
 import PrivateRoute from "./PrivateRouter";
 import EditPlan from "./pages/dashboard/planning/EditPlan";
+import UpsDashboard from "./pages/dashboard/upsDesign/UpsDashboard";
 import CoatingDashboard from "./pages/dashboard/coating/CoatingDashboard";
-import EditCoatingDetails from "./pages/dashboard/coating/EditCoatingDetails"
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import CreateUser from "./pages/admin/CreateUser";
 import NotFound from "./NotFound";
-import DesigningDashboard from "./pages/dashboard/desigining/DesigningDashboard";
-import PrintingManager from "./pages/dashboard/printing/PrintingManager";
-import EditPrint from "./pages/dashboard/printing/EditPrint";
-import EditDesign from "./pages/dashboard/desigining/EditDesign";
 
 function Mainlayouts() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -92,37 +88,10 @@ function Mainlayouts() {
             />
 
             <Route
-              path="/desigining_dashboard"
+              path="/UpsDesignplan"
               element={
                 <PrivateRoute>
-                  <DesigningDashboard />
-                </PrivateRoute>
-              }
-            />
-
-            <Route
-              path="/editdesign"
-              element={
-                <PrivateRoute>
-                  <EditDesign />
-                </PrivateRoute>
-              }
-            />
-
-            <Route
-              path="/printing_manager"
-              element={
-                <PrivateRoute>
-                  <PrintingManager />
-                </PrivateRoute>
-              }
-            />
-
-            <Route
-              path="/editprint"
-              element={
-                <PrivateRoute>
-                  <EditPrint />
+                  <UpsDashboard />
                 </PrivateRoute>
               }
             />
@@ -132,15 +101,6 @@ function Mainlayouts() {
               element={
                 <PrivateRoute>
                   <CoatingDashboard />
-                </PrivateRoute>
-              }
-            />
-
-            <Route
-              path="/editCoating"
-              element={
-                <PrivateRoute>
-                  <EditCoatingDetails />
                 </PrivateRoute>
               }
             />
