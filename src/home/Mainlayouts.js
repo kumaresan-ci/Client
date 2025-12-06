@@ -11,10 +11,11 @@ import PrivateRoute from "./PrivateRouter";
 import EditPlan from "./pages/dashboard/planning/EditPlan";
 import UpsDashboard from "./pages/dashboard/upsDesign/UpsDashboard";
 import CoatingDashboard from "./pages/dashboard/coating/CoatingDashboard";
+import EditCoatingDetails from "./pages/dashboard/coating/EditCoatingDetails"
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import CreateUser from "./pages/admin/CreateUser";
 import NotFound from "./NotFound";
-import DesigningDashboard from "./pages/desigining/DesigningDashboard";
+import DesigningDashboard from "./pages/desigining/designingDashboard";
 import PrintingManager from "./pages/dashboard/printing/PrintingManager";
 import EditPrint from "./pages/dashboard/printing/EditPrint";
 
@@ -131,6 +132,15 @@ function Mainlayouts() {
               element={
                 <PrivateRoute>
                   <CoatingDashboard />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/editCoating"
+              element={
+                <PrivateRoute>
+                  <EditCoatingDetails />
                 </PrivateRoute>
               }
             />

@@ -197,7 +197,9 @@ const Sidebar = ({ isCollapsed }) => {
           component={Link}
           to="/coating_dashboard"
           className={`list-element ${
-            location.pathname === "/coating_dashboard" ? "pageactive" : ""
+            location.pathname === "/coating_dashboard" || 
+            location.pathname === "/editCoating" 
+              ? "pageactive" : ""
           }`}
         >
           <FormatPaintIcon className="menu-icon" />
